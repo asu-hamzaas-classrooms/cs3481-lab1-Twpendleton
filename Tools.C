@@ -144,7 +144,18 @@ uint64_t Tools::getBits(uint64_t source, int32_t low, int32_t high)
  */
 uint64_t Tools::setBits(uint64_t source, int32_t low, int32_t high)
 {
-  return 0;
+  if (low < 0 || low > 63 || low > high || high < 0 || high > 63)
+  {
+    return source;
+  }
+
+  uint64_t num;
+  num = -1;
+  num = num << (63-high);
+  num = num >> (low + (63 - high));
+  num = num << low;
+
+  return num | source;
 }
 
 /**
@@ -225,7 +236,7 @@ uint64_t Tools::copyBits(uint64_t source, uint64_t dest,
  */
 uint64_t Tools::setByte(uint64_t source, int32_t byteNum)
 {
-  return 0;
+  return setBits(source, byteNum * 8, ((byteNum + 1) * 8) - 1);
 }
 
 
