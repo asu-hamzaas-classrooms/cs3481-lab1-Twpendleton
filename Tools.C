@@ -43,7 +43,13 @@
 */
 uint64_t Tools::buildLong(uint8_t bytes[LONGSIZE])
 {
-  return 0;
+  uint64_t builtLong;
+  for (uint8_t i = LONGSIZE; i > 0; i--)
+  {
+    builtLong = (builtLong << 8) + bytes[i - 1];
+  }
+
+  return builtLong;
 }
 
 /** 
@@ -234,7 +240,7 @@ uint64_t Tools::setByte(uint64_t source, int32_t byteNum)
  */
 uint64_t Tools::sign(uint64_t source)
 {
-  return 0;
+  return source >> 63;
 }
 
 /**
