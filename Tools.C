@@ -109,7 +109,14 @@ uint64_t Tools::getByte(uint64_t source, int32_t byteNum)
  */
 uint64_t Tools::getBits(uint64_t source, int32_t low, int32_t high)
 {
-  return 0;
+  if (low < 0 || low > 63 || low > high || high < 0 || high > 63)
+  {
+    return 0;
+  }
+  source = source << (63 - high);
+  source = source >> (low + (63 - high));
+
+  return source;
 }
 
 
@@ -270,7 +277,12 @@ bool Tools::addOverflow(uint64_t op1, uint64_t op2)
   //      Thus, the way to check for an overflow is to compare the signs of the
   //      operand and the result.  For example, if you add two positive numbers, 
   //      the result should be positive, otherwise an overflow occurred.
-  return false;
+  int s1 = sign(op1);
+  int s2 = sign(op2);
+  int combineds1s2 = sign(op1 + op2);
+  bool result = (s1 == s2) && (combineds1s2 != s1);
+
+  return result;
 }
 
 /**
@@ -299,5 +311,10 @@ bool Tools::subOverflow(uint64_t op1, uint64_t op2)
   //Note: you can not simply use addOverflow in this function.  If you negate
   //op1 in order to an add, you may get an overflow. 
   //NOTE: the subtraction is op2 - op1 (not op1 - op2).
-  return false;
+
+  int s1 = sign(op1);
+  int s2 = sign(op2);
+  int combineds1s2 = sign(op2 - op1);
+  bool result = (s1 != s2) && (combineds1s2 != s2);
+  return result;
 }
