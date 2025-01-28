@@ -149,10 +149,12 @@ uint64_t Tools::setBits(uint64_t source, int32_t low, int32_t high)
     return source;
   }
 
+  uint64_t num2 = 63-high;
+
   uint64_t num;
   num = -1;
-  num = num << (63-high);
-  num = num >> (low + (63 - high));
+  num = num << num2;
+  num = num >> (low + num2);
   num = num << low;
 
   return num | source;
@@ -180,7 +182,16 @@ uint64_t Tools::setBits(uint64_t source, int32_t low, int32_t high)
  */
 uint64_t Tools::clearBits(uint64_t source, int32_t low, int32_t high)
 {
-  return 0;
+  if (low < 0 || low > 63 || low > high || high < 0 || high > 63)
+  {
+    return source;
+  }
+  u_int64_t highLow = high - low;
+
+  u_int64_t modSource = (1 << ((highLow) + 1)) - 1;
+
+ return ~(modSource << low) & source;
+
 }
 
 
@@ -211,7 +222,15 @@ uint64_t Tools::clearBits(uint64_t source, int32_t low, int32_t high)
 uint64_t Tools::copyBits(uint64_t source, uint64_t dest, 
                          int32_t srclow, int32_t dstlow, int32_t length)
 {
-   return 0; 
+  if (srclow < 0 || dstlow < 0 || length <= 0 || 
+      srclow + length > 64 || dstlow + length > 64)
+  {
+    return dest;
+  }
+    uint64_t getbit = getBits(source, srclow, (srclow + length) - 1 );
+
+    uint64_t removeDest = clearBits(dest, dstlow, (dstlow + length)-1);
+   return removeDest | (getbit << dstlow); 
 }
 
 
