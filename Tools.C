@@ -115,7 +115,6 @@ uint64_t Tools::getBits(uint64_t source, int32_t low, int32_t high)
   }
   source = source << (63 - high);
   source = source >> (low + (63 - high));
-
   return source;
 }
 
@@ -144,20 +143,15 @@ uint64_t Tools::getBits(uint64_t source, int32_t low, int32_t high)
  */
 uint64_t Tools::setBits(uint64_t source, int32_t low, int32_t high)
 {
-  if (low < 0 || low > 63 || low > high || high < 0 || high > 63)
-  {
-    return source;
-  }
+	if (low < 0 || high > 63 || low > high) {
+		return source;
+	}
 
-  uint64_t num2 = 63-high;
+	const uint64_t ALL = ~0;
+	uint64_t mask = Tools::getBits(ALL, low, high);
+	mask <<= low; 
 
-  uint64_t num;
-  num = -1;
-  num = num << num2;
-  num = num >> (low + num2);
-  num = num << low;
-
-  return num | source;
+	return source | mask;
 }
 
 /**
@@ -182,16 +176,16 @@ uint64_t Tools::setBits(uint64_t source, int32_t low, int32_t high)
  */
 uint64_t Tools::clearBits(uint64_t source, int32_t low, int32_t high)
 {
-  if (low < 0 || low > 63 || low > high || high < 0 || high > 63)
-  {
-    return source;
-  }
-  u_int64_t highLow = high - low;
+	if (low < 0 || high > 63 || low > high) {
+		return source;
+	}
 
-  u_int64_t modSource = (1 << ((highLow) + 1)) - 1;
+	const uint64_t ALL = ~0;
+	uint64_t mask = Tools::getBits(ALL, low, high);
+	mask <<= low; 
+	mask = ~mask;
 
- return ~(modSource << low) & source;
-
+	return source & mask;
 }
 
 
@@ -222,15 +216,18 @@ uint64_t Tools::clearBits(uint64_t source, int32_t low, int32_t high)
 uint64_t Tools::copyBits(uint64_t source, uint64_t dest, 
                          int32_t srclow, int32_t dstlow, int32_t length)
 {
-  if (srclow < 0 || dstlow < 0 || length <= 0 || 
-      srclow + length > 64 || dstlow + length > 64)
-  {
-    return dest;
-  }
-    uint64_t getbit = getBits(source, srclow, (srclow + length) - 1 );
+	if (srclow < 0 || dstlow < 0 || length <= 0 ||
+			srclow + length > 64 || dstlow + length > 64) {
+		return dest; 
+	}
 
-    uint64_t removeDest = clearBits(dest, dstlow, (dstlow + length)-1);
-   return removeDest | (getbit << dstlow); 
+	uint64_t bitsToCopy = getBits(source, srclow, srclow + length - 1);
+	bitsToCopy <<= dstlow;
+
+	dest = clearBits(dest, dstlow, dstlow + length - 1);
+	dest |= bitsToCopy;
+
+	return dest;
 }
 
 
@@ -255,7 +252,9 @@ uint64_t Tools::copyBits(uint64_t source, uint64_t dest,
  */
 uint64_t Tools::setByte(uint64_t source, int32_t byteNum)
 {
-  return setBits(source, byteNum * 8, ((byteNum + 1) * 8) - 1);
+	const uint64_t low = byteNum * 8;
+	const uint64_t high = (byteNum + 1) * 8 - 1;
+	return setBits(source, low, high);
 }
 
 
@@ -307,12 +306,12 @@ bool Tools::addOverflow(uint64_t op1, uint64_t op2)
   //      Thus, the way to check for an overflow is to compare the signs of the
   //      operand and the result.  For example, if you add two positive numbers, 
   //      the result should be positive, otherwise an overflow occurred.
-  int s1 = sign(op1);
-  int s2 = sign(op2);
-  int combineds1s2 = sign(op1 + op2);
-  bool result = (s1 == s2) && (combineds1s2 != s1);
 
-  return result;
+	uint64_t firstSign = Tools::sign(op1);
+	uint64_t secondSign = Tools::sign(op2);
+	uint64_t resultSign = Tools::sign(op1 + op2);
+
+	return (firstSign == secondSign) && (firstSign != resultSign);
 }
 
 /**
@@ -342,9 +341,9 @@ bool Tools::subOverflow(uint64_t op1, uint64_t op2)
   //op1 in order to an add, you may get an overflow. 
   //NOTE: the subtraction is op2 - op1 (not op1 - op2).
 
-  int s1 = sign(op1);
-  int s2 = sign(op2);
-  int combineds1s2 = sign(op2 - op1);
-  bool result = (s1 != s2) && (combineds1s2 != s2);
-  return result;
+	uint64_t firstSign = Tools::sign(op1);
+	uint64_t secondSign = Tools::sign(op2);
+	uint64_t resultSign = Tools::sign(op2 - op1);
+
+	return (firstSign != secondSign) && (secondSign != resultSign);
 }
